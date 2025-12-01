@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
-// Імпортуємо всі наші екрани
+// Імпортуємо ВСІ наші репозиторії
+import 'data/repositories/i_auth_repository.dart';
+import 'data/repositories/local_auth_repository.dart';
+import 'data/repositories/i_music_repository.dart';
+import 'data/repositories/local_music_repository.dart';
+
+// Імпортую екрани
 import 'screens/login_page.dart';
 import 'screens/registration_page.dart';
 import 'screens/home_page.dart';
@@ -10,10 +17,35 @@ import 'screens/all_music_list_page.dart';
 import 'screens/file_explorer_page.dart';
 import 'screens/player_page.dart';
 
-void main() {
-  runApp(const MyApp());
-}
 
+
+// ... (імпорти екранів)
+
+// main() тепер асинхронна, щоб ми могли ініціалізувати БД
+void main() async {
+  // Це потрібно, щоб Flutter був готовий до асинхронного main
+  WidgetsFlutterBinding.ensureInitialized(); 
+  
+  // Можна додати ініціалізацію БД тут, якщо потрібно
+  // await AppDatabase.instance.database; 
+  
+  runApp(
+    // 1. Використовуємо MultiProvider для "надання" кількох сервісів
+    MultiProvider(
+      providers: [
+        // 2. Наш Auth Репозиторій
+        Provider<IAuthRepository>(
+          create: (_) => LocalAuthRepository(),
+        ),
+        // 3. Наш НОВИЙ Music Репозиторій
+        Provider<IMusicRepository>(
+          create: (_) => LocalMusicRepository(),
+        ),
+      ],
+      child: const MyApp(),
+    ),
+  );
+}
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -46,8 +78,9 @@ class MyApp extends StatelessWidget {
         ),
       ),
       debugShowCheckedModeBanner: false,
+      
 
-      // Це "іменований роутинг". Дуже чисто і зручно.
+      // "Іменований роутинг". Дуже потужно.
       initialRoute: '/login', // Стартовий екран
       routes: {
         '/login': (context) => const LoginPage(),
