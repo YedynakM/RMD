@@ -4,7 +4,6 @@ import 'package:rmd_lab/data/repositories/i_music_repository.dart';
 import 'package:rmd_lab/models/track.dart';
 import 'package:rmd_lab/widgets/music_track_tile.dart'; 
 
-// Перетворюємо на StatefulWidget, щоб керувати станом завантаження/сортування
 class AllMusicListPage extends StatefulWidget {
   const AllMusicListPage({super.key});
 
@@ -13,33 +12,32 @@ class AllMusicListPage extends StatefulWidget {
 }
 
 class _AllMusicListPageState extends State<AllMusicListPage> {
-  // 'late' означає, що ми ініціалізуємо цю змінну трохи пізніше (в initState)
+
   late Future<List<Track>> _tracksFuture;
-  var _sortType = TrackSortType.byDateAdded; // Стан сортування
+  var _sortType = TrackSortType.byDateAdded; 
 
   @override
   void initState() {
     super.initState();
-    // Завантажуємо треки при першому відкритті сторінки
+
     _loadTracks();
   }
 
-  // Функція для завантаження або перезавантаження треків
+
   void _loadTracks() {
-    // Отримуємо репозиторій з Provider
+
     final musicRepo = Provider.of<IMusicRepository>(context, listen: false);
     setState(() {
-      // 1. Зберігаємо Future в змінну стану
+
       _tracksFuture = musicRepo.getTracks(sort: _sortType);
     });
   }
   
-  // Функція для видалення треку
   Future<void> _deleteTrack(Track track) async {
     final musicRepo = Provider.of<IMusicRepository>(context, listen: false);
     try {
       await musicRepo.deleteTrack(track);
-      // Після успішного видалення - перезавантажуємо список
+
       _loadTracks(); 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -55,13 +53,13 @@ class _AllMusicListPageState extends State<AllMusicListPage> {
     }
   }
 
-  // Функція для "улюблених"
+
   Future<void> _toggleFavorite(Track track) async {
     final musicRepo = Provider.of<IMusicRepository>(context, listen: false);
     try {
-      // Перемикаємо статус
+
       await musicRepo.toggleFavorite(track.id!, !track.isFavorite);
-      // Перезавантажуємо список, щоб побачити зміни
+
       _loadTracks(); 
     } catch (e) {
       if (mounted) {
@@ -79,13 +77,13 @@ class _AllMusicListPageState extends State<AllMusicListPage> {
       appBar: AppBar(
         title: const Text('Моя Бібліотека'),
         actions: [
-          // 2. Меню для сортування
+
           PopupMenuButton<TrackSortType>(
             icon: const Icon(Icons.sort),
             onSelected: (sortType) {
               setState(() {
                 _sortType = sortType;
-                _loadTracks(); // Перезавантажуємо з новим сортуванням
+                _loadTracks(); 
               });
             },
             itemBuilder: (context) => [
@@ -105,19 +103,19 @@ class _AllMusicListPageState extends State<AllMusicListPage> {
           )
         ],
       ),
-      // 3. Використовуємо FutureBuilder для відображення списку
+
       body: FutureBuilder<List<Track>>(
         future: _tracksFuture,
         builder: (context, snapshot) {
-          // Поки дані завантажуються
+
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          // Якщо помилка
+
           if (snapshot.hasError) {
             return Center(child: Text('Помилка завантаження треків: ${snapshot.error}'));
           }
-          // Якщо дані є, але список порожній
+
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(
               child: Text(
@@ -128,7 +126,6 @@ class _AllMusicListPageState extends State<AllMusicListPage> {
             );
           }
 
-          // 4. Дані завантажено, будуємо список
           final tracks = snapshot.data!;
 
          return ListView.builder(
@@ -138,7 +135,7 @@ class _AllMusicListPageState extends State<AllMusicListPage> {
               
               
               return Dismissible( 
-                key: Key(track.id.toString()), // Унікальний ключ
+                key: Key(track.id.toString()), 
                 direction: DismissDirection.endToStart,
                 background: Container(
                   color: Colors.red,

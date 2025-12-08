@@ -1,120 +1,140 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
+import '../providers/home_provider.dart';
+import '../models/remote_track.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+    final homeProvider = context.watch<HomeProvider>();
+    final tracks = homeProvider.remoteTracks; 
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text("My audio collection"),
+        title: Text('Привіт, ${authProvider.currentUsername ?? "User"}'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.person),
-            onPressed: () {
-              Navigator.pushNamed(context, '/profile');
-            },
+            icon: const Icon(Icons.library_music),
+            tooltip: "Локальна бібліотека",
+            onPressed: () => Navigator.pushNamed(context, '/all-music'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.exit_to_app),
+            onPressed: () => _showLogoutDialog(context),
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // 
-            // Картка для навігації до Списку Музики
-            _buildHomeCard(
-              context: context,
-              icon: Icons.library_music,
-              title: "Моя Бібліотека",
-              subtitle: "Переглянути всі треки",
-              routeName: '/all-music',
-            ),
-            const SizedBox(height: 16),
-            // Картка для навігації до Провідника
-            _buildHomeCard(
-              context: context,
-              icon: Icons.file_open,
-              title: "Імпорт Файлів",
-              subtitle: "Знайти нову музику на пристрої",
-              routeName: '/explorer',
-            ),
-            const Spacer(),
-            // Фейковий "міні-плеєр" внизу
-            _buildMiniPlayer(context),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // "приватний" віджет
-  Widget _buildHomeCard({
-    required BuildContext context,
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required String routeName,
-  }) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: InkWell(
-        onTap: () {
-          Navigator.pushNamed(context, routeName);
-        },
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Row(
-            children: [
-              Icon(icon, size: 40, color: Colors.deepPurple),
-              const SizedBox(width: 20),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title,
-                        style: Theme.of(context).textTheme.titleLarge),
-                    Text(subtitle,
-                        style: Theme.of(context).textTheme.bodySmall),
-                  ],
-                ),
+      body: Column(
+        children: [
+          if (authProvider.isOffline)
+            Container(
+              color: Colors.redAccent,
+              width: double.infinity,
+              padding: const EdgeInsets.all(8),
+              child: const Text(
+                'Офлайн режим. Дані можуть бути неактуальні.',
+                style: TextStyle(color: Colors.white),
+                textAlign: TextAlign.center,
               ),
-              const Icon(Icons.arrow_forward_ios),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Фейковий міні-плеєр
-  Widget _buildMiniPlayer(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.pushNamed(context, '/player');
-      },
-      child: Card(
-        color: Colors.deepPurple.withOpacity(0.5),
-        child: const Padding(
-          padding: EdgeInsets.all(12.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
+            ),
+          if (!homeProvider.isMqttConnected && !authProvider.isOffline)
+            Container(
+              color: Colors.orangeAccent,
+              padding: const EdgeInsets.all(4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.music_note),
-                  SizedBox(width: 10),
-                  Text("Зараз грає: Cool Fake Track (very cool)..."),
+                  const Text("Підключення до MQTT..."),
+                  const SizedBox(width: 10),
+                  IconButton(
+                      onPressed: homeProvider.reconnectMqtt,
+                      icon: const Icon(Icons.refresh))
                 ],
               ),
-              Icon(Icons.play_arrow),
-            ],
+            ),
+          
+          // Заголовок списку
+          const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text("Музика на ПК (MQTT):", 
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey))
+            ),
           ),
+
+          Expanded(
+            child: homeProvider.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : tracks.isEmpty
+                    ? const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.cloud_off, size: 60, color: Colors.grey),
+                            Text('Немає треків з ПК'),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: tracks.length,
+                        itemBuilder: (context, index) {
+                          final track = tracks[index];
+                          return _buildTrackCard(track); 
+                        },
+                      ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTrackCard(RemoteTrack track) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      elevation: 2,
+      child: ListTile(
+        leading: const CircleAvatar(
+          backgroundColor: Colors.deepPurple,
+          child: Icon(Icons.computer, color: Colors.white),
+        ),
+        title: Text(track.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Text('${track.artist} • ${track.sizeMb} MB'),
+        trailing: IconButton(
+          icon: const Icon(Icons.download_rounded),
+          onPressed: () {
+            // Тут буде логіка завантаження пізніше
+          },
         ),
       ),
     );
+  }
+
+  Future<void> _showLogoutDialog(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Вихід'),
+        content: const Text('Ви впевнені, що хочете вийти з облікового запису?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Скасувати'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Вийти'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      await context.read<AuthProvider>().logout();
+    }
   }
 }

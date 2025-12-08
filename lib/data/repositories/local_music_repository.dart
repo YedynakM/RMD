@@ -9,15 +9,14 @@ import 'package:sqflite/sqflite.dart';
 
 class LocalMusicRepository implements IMusicRepository {
   final dbProvider = AppDatabase.instance;
-  final String _appMusicFolder = 'MyProgMusic'; // Твоя папка!
-
-  // Приватна функція для отримання нашої папки
+  final String _appMusicFolder = 'MyProgMusic'; 
+  
   Future<Directory> _getAppMusicDirectory() async {
     final appDir = await getApplicationDocumentsDirectory();
     final musicDir = Directory(p.join(appDir.path, _appMusicFolder));
 
     if (!await musicDir.exists()) {// ignore: avoid_slow_async_io
-      await musicDir.create(recursive: true); // Створюємо, якщо не існує
+      await musicDir.create(recursive: true); 
     }
     
     return musicDir;
@@ -29,22 +28,20 @@ class LocalMusicRepository implements IMusicRepository {
       final musicDir = await _getAppMusicDirectory();
       final newPath = p.join(musicDir.path, p.basename(file.path));
 
-      // 1. Копіюємо (або переміщуємо) файл у папку додатка
-      // Використовуємо copy, бо move може не спрацювати між різними "дисками"
+
       final newFile = await file.copy(newPath); 
 
-      // 2. Збираємо інформацію про файл
-      final fileStat = await newFile.stat();// ignore: avoid_slow_async_io
+
+      final fileStat = await newFile.stat();
       final title = p.basenameWithoutExtension(newFile.path);
       final format = p.extension(newFile.path);
       final sizeMb = fileStat.size / (1024 * 1024);
       
       // TODO: Отримати справжню тривалість та артиста
-      // Поки що не реалізовано, це складніша логіка
+
       final durationMs = 0; 
       final artist = 'Unknown Artist';
 
-      // 3. Створюємо об'єкт Track
       final track = Track(
         title: title,
         artist: artist,
@@ -54,12 +51,10 @@ class LocalMusicRepository implements IMusicRepository {
         durationMs: durationMs,
       );
 
-      // 4. Записуємо в Базу Даних
       final db = await dbProvider.database;
       await db.insert(
         AppDatabase.trackTable,
         track.toMap(),
-        // UNIQUE на 'path' попіклується про дублікати
         conflictAlgorithm: ConflictAlgorithm.ignore, 
       );
       return true;
@@ -84,8 +79,8 @@ class LocalMusicRepository implements IMusicRepository {
         orderBy = 'sizeMb DESC';
         break;
       case TrackSortType.byDateAdded:
-        orderBy = 'id DESC'; // Новіші - перші
-        break; // Додаємо 'break' сюди
+        orderBy = 'id DESC'; 
+        break; 
     }
 
     final List<Map<String, dynamic>> maps = await db.query(
@@ -93,7 +88,6 @@ class LocalMusicRepository implements IMusicRepository {
       orderBy: orderBy,
     );
 
-    // Перетворюємо список Map в список Track
     return List.generate(maps.length, (i) => Track.fromMap(maps[i]));
   }
 
@@ -103,7 +97,7 @@ class LocalMusicRepository implements IMusicRepository {
     final List<Map<String, dynamic>> maps = await db.query(
       AppDatabase.trackTable,
       where: 'isFavorite = ?',
-      whereArgs: [1], // Шукаємо, де isFavorite = 1
+      whereArgs: [1], 
       orderBy: 'title ASC',
     );
     return List.generate(maps.length, (i) => Track.fromMap(maps[i]));
@@ -114,7 +108,7 @@ class LocalMusicRepository implements IMusicRepository {
     final db = await dbProvider.database;
     await db.update(
       AppDatabase.trackTable,
-      {'isFavorite': isFavorite ? 1 : 0}, // Нове значення
+      {'isFavorite': isFavorite ? 1 : 0}, 
       where: 'id = ?',
       whereArgs: [trackId],
     );
@@ -124,14 +118,12 @@ class LocalMusicRepository implements IMusicRepository {
   Future<void> deleteTrack(Track track) async {
     final db = await dbProvider.database;
     
-    // 1. Видаляємо з БД
     await db.delete(
       AppDatabase.trackTable,
       where: 'id = ?',
       whereArgs: [track.id],
     );
     
-    // 2. Видаляємо файл з папки MyProgMusic
     try {
       final file = File(track.path);
       if (await file.exists()) {

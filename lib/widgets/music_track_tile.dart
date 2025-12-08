@@ -1,23 +1,22 @@
 import 'package:flutter/material.dart';
-// Переконайся, що ім'я 'rmd_lab' - це назва твого проєкту
 import 'package:rmd_lab/models/track.dart'; 
 
 class MusicTrackTile extends StatelessWidget {
-  // 1. Тепер він приймає 'Track', а не окремі рядки
+
   final Track track; 
   final VoidCallback onPlay;
   final VoidCallback onToggleFavorite; 
 
   const MusicTrackTile({
     super.key,
-    required this.track, // 2. 'track' - обов'язковий параметр
+    required this.track,
     required this.onPlay,
     required this.onToggleFavorite,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Функція для форматування тривалості
+ 
     String formatDuration(int ms) {
       if (ms <= 0) return "--:--";
       final duration = Duration(milliseconds: ms);
@@ -31,17 +30,17 @@ class MusicTrackTile extends StatelessWidget {
         backgroundColor: Colors.deepPurple,
         child: Icon(Icons.music_note, color: Colors.white),
       ),
-      // 3. Використовуємо дані з об'єкта 'track'
+
       title: Text(track.title, style: const TextStyle(fontWeight: FontWeight.bold), maxLines: 1),
       subtitle: Text(
         '${track.artist ?? "Невідомий"} • ${track.sizeMb.toStringAsFixed(1)} MB',
         maxLines: 1,
       ),
       trailing: Row(
-        mainAxisSize: MainAxisSize.min, // Займати мінімум місця
+        mainAxisSize: MainAxisSize.min, 
         children: [
           Text(formatDuration(track.durationMs)),
-          // Кнопка "Улюблене"
+
           IconButton(
             icon: Icon(
               track.isFavorite ? Icons.favorite : Icons.favorite_border,

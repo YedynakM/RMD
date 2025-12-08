@@ -1,23 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:rmd_lab/models/track.dart'; // Імпортуємо модель
+import 'package:rmd_lab/models/track.dart'; 
 
 class PlayerPage extends StatelessWidget {
   const PlayerPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // 1. Отримуємо об'єкт Track, який ми передали через 'arguments'
+
     final track = ModalRoute.of(context)!.settings.arguments as Track?;
     
-    // Повертаємо твій 'MediaQuery' для адаптивності
     final screenSize = MediaQuery.of(context).size;
 
-    // 2. Якщо трек не передано, показуємо дані за замовчуванням
     final title = track?.title ?? "Назва Треку";
     final artist = track?.artist ?? "Виконавець";
     final durationMs = track?.durationMs ?? 0;
     
-    // Функція для форматування тривалості
+
     String formatDuration(int ms) {
       if (ms <= 0) return "--:--";
       final duration = Duration(milliseconds: ms);
@@ -32,9 +30,9 @@ class PlayerPage extends StatelessWidget {
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.edit), // Кнопка "Редагувати"
+            icon: const Icon(Icons.edit), 
             onPressed: () {
-              // Тут буде логіка перейменування
+
             },
           ),
         ],
@@ -46,11 +44,6 @@ class PlayerPage extends StatelessWidget {
           children: [
             const Spacer(),
             
-            // [Image of an album cover]
-
-
-
-            // Твій контейнер для обкладинки
             Container(
               width: screenSize.width * 0.7,
               height: screenSize.width * 0.7,
@@ -63,12 +56,12 @@ class PlayerPage extends StatelessWidget {
             ),
             const SizedBox(height: 40),
             
-            // 3. Використовуємо реальні дані
+
             Text(
               title,
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
-              maxLines: 2, // На випадок довгих назв
+              maxLines: 2, 
             ),
             const SizedBox(height: 8),
             Text(
@@ -77,11 +70,11 @@ class PlayerPage extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             
-            // Твій слайдер
+
             Slider(
-              value: 0.3, // "нібито" на 30%
+              value: 0.3, 
               onChanged: (value) {
-                // Логіки немає
+
               },
               activeColor: Colors.deepPurple,
             ),
@@ -89,12 +82,11 @@ class PlayerPage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text("1:02"), // TODO: 'Поточний час'
-                Text(formatDuration(durationMs)), // 4. Реальна тривалість
+                Text(formatDuration(durationMs)), 
               ],
             ),
             const Spacer(),
             
-            // Твої кнопки управління
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
