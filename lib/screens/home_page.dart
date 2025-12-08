@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/home_provider.dart';
 import '../models/remote_track.dart';
+import 'remote_music_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -11,12 +12,24 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
     final homeProvider = context.watch<HomeProvider>();
-    final tracks = homeProvider.remoteTracks; 
+    final tracks = homeProvider.remoteTracks;
 
     return Scaffold(
       appBar: AppBar(
         title: Text('Привіт, ${authProvider.currentUsername ?? "User"}'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.computer),
+            tooltip: "Відкрити Remote Music",
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const RemoteMusicPage(),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.library_music),
             tooltip: "Локальна бібліотека",
@@ -56,17 +69,16 @@ class HomePage extends StatelessWidget {
                 ],
               ),
             ),
-          
-          // Заголовок списку
           const Padding(
             padding: EdgeInsets.all(8.0),
             child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text("Музика на ПК (MQTT):", 
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey))
-            ),
+                alignment: Alignment.centerLeft,
+                child: Text("Музика на ПК (MQTT):",
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey))),
           ),
-
           Expanded(
             child: homeProvider.isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -75,7 +87,8 @@ class HomePage extends StatelessWidget {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.cloud_off, size: 60, color: Colors.grey),
+                            Icon(Icons.cloud_off,
+                                size: 60, color: Colors.grey),
                             Text('Немає треків з ПК'),
                           ],
                         ),
@@ -84,7 +97,7 @@ class HomePage extends StatelessWidget {
                         itemCount: tracks.length,
                         itemBuilder: (context, index) {
                           final track = tracks[index];
-                          return _buildTrackCard(track); 
+                          return _buildTrackCard(track);
                         },
                       ),
           ),
@@ -102,14 +115,9 @@ class HomePage extends StatelessWidget {
           backgroundColor: Colors.deepPurple,
           child: Icon(Icons.computer, color: Colors.white),
         ),
-        title: Text(track.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(track.title,
+            style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text('${track.artist} • ${track.sizeMb} MB'),
-        trailing: IconButton(
-          icon: const Icon(Icons.download_rounded),
-          onPressed: () {
-            // Тут буде логіка завантаження пізніше
-          },
-        ),
       ),
     );
   }
@@ -119,7 +127,8 @@ class HomePage extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Вихід'),
-        content: const Text('Ви впевнені, що хочете вийти з облікового запису?'),
+        content:
+            const Text('Ви впевнені, що хочете вийти з облікового запису?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
