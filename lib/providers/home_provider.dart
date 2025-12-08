@@ -1,15 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../data/services/mqtt_service.dart';
-import '../models/remote_track.dart'; // <--- Імпорт
+import '../models/remote_track.dart'; 
 
 class HomeProvider with ChangeNotifier {
   final MqttService _mqttService;
   
-  // ЗМІНЕНО:
   List<RemoteTrack> _remoteTracks = [];
   bool _isLoading = true;
-  StreamSubscription? _mqttSubscription;
+  StreamSubscription<dynamic>? _mqttSubscription;
 
   List<RemoteTrack> get remoteTracks => _remoteTracks;
   bool get isLoading => _isLoading;
@@ -25,7 +24,6 @@ class HomeProvider with ChangeNotifier {
 
     _mqttService.connect();
 
-    // Слухаємо потік треків
     _mqttSubscription = _mqttService.dataStream.listen((newData) {
       _remoteTracks = newData;
       _isLoading = false;

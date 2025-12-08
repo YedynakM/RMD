@@ -5,14 +5,12 @@ import 'package:mqtt_client/mqtt_server_client.dart';
 import '/models/remote_track.dart';
 
 class MqttService {
-  // Використовуємо правильну схему для WebSocket підключення HiveMQ
   final String broker = 'ws://broker.hivemq.com/mqtt';
   final String topic = 'music/yammy/full';
   late final String clientIdentifier;
 
   late MqttServerClient _client;
-  
-  // Стрім тепер типізовано під MusicTrack
+
   final StreamController<List<RemoteTrack>> _dataStreamController = StreamController.broadcast();
 
   Stream<List<RemoteTrack>> get dataStream => _dataStreamController.stream;
@@ -27,7 +25,7 @@ class MqttService {
     _client.useWebSocket = true;
     _client.websocketProtocols = ['mqtt'];
     _client.secure = false;
-    _client.keepAlivePeriod = 60;
+    _client.keepAlivePeriod = 120;
     _client.logging(on: true);
 
     _client.onDisconnected = _onDisconnected;
@@ -80,7 +78,6 @@ class MqttService {
       
       try {
         if (payload.isNotEmpty) {
-           // Використовуємо метод парсингу з моделі MusicTrack
            final tracks = RemoteTrack.parseList(payload);
            
            if (tracks.isNotEmpty) {
